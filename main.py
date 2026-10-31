@@ -3,12 +3,13 @@ import pandas as pd
 from datetime import datetime
 import plotly.express as px
 
-API_KEY = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=Y9FIZTAFCOT4JY38"
+API_KEY = "Z44DR7L1TCPO0BOR"
+BASE_URL = "https://www.alphavantage.co/query"
 
 def get_user_input():
     symbol = input("Enter stock symbol (example: AAPL): ").strip().upper()
 
-    if symbol == "":
+    while not symbol:
         symbol = input("Enter a valid stock symbol (example: AAPL): ").strip().upper()
 
     chart_types = {
@@ -26,20 +27,47 @@ def get_user_input():
         chart_choice = input("invalid choice. Enter 1, 2, or 3: ").strip()
 
     functions = {
-        "1": "TIME_SERIES_DAILY",
-        "2": "TIME_SERIES_WEEKLY",
-        "3": "TIME_SERIES_MONTHLY"
+        "1": "TIME_SERIES_INTRADAY",
+        "2": "TIME_SERIES_DAILY",
+        "3": "TIME_SERIES_WEEKLY",
+        "4": "TIME_SERIES_MONTHLY"
     }
 
     print("\nSelect time series type:")
-    print("1. Daily")
-    print("2. Weekly")
-    print("3. Monthly")
+    print("1. Intraday")
+    print("2. Daily")
+    print("3. Weekly")
+    print("4. Monthly")
 
-    function_choice = input("Enter choice (1-3): ").strip()
+    function_choice = input("Enter choice (1-4): ").strip()
 
     while function_choice not in functions:
-        function_choice = input("Invalid choice. Enter 1, 2, or 3: ").strip()
+        function_choice = input("Invalid choice. Enter 1, 2, 3, or 4: ").strip()
+
+    interval = None
+
+    if function_choice == "1":
+        intervals = {
+            "1": "1min",
+            "2": "5min",
+            "3": "15min",
+            "4": "30min",
+            "5": "60min",
+        }
+
+        print("\nSelect intraday interval:")
+        print("1. 1 minute")
+        print("2. 5 minutes")
+        print("3. 15 minutes")
+        print("4. 30 minutes")
+        print("5. 60 minutes")
+
+        interval_choice = input("Enter choice (1-5): ").strip()
+
+        while interval_choice not in intervals:
+            interval_choice = input("Invalid choice. Enter 1-5: ").strip()
+
+        interval = intervals[interval_choice]
     
     start_date = get_valid_date("Enter the start date (YYYY-MM-DD): ")
     end_date = get_valid_date("Enter the end date (YYYY-MM-DD): ")
@@ -52,33 +80,35 @@ def get_user_input():
         symbol,
         chart_types[chart_choice],
         functions[function_choice],
+        interval,
         start_date,
         end_date
     )
 
 def get_valid_date(prompt):
-    # validates that the start date is before the end date
     while True:
         date_str = input(prompt).strip()
         try:
-            # Try to parse the date to validate the format
             datetime.strptime(date_str, "%Y-%m-%d")
             return date_str
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD format.")
 
-def get_stock_data(symbol, function):
+def get_stock_data(symbol, function, interval=None):
 
     parameters = {
         "function": function,
         "symbol": symbol,
-        "outputsize": "compact",
+        "outputsize": "full",
         "apikey": API_KEY
     }
 
+    if function == "TIME_SERIES_INTRADAY":
+        parameters["interval"] = interval
+
     try:
         response = requests.get(
-            url=API_KEY,
+            url=BASE_URL,
             params=parameters,
             timeout=30
         )
@@ -166,18 +196,24 @@ def main():
     print("             Stock Data Visualizer")
     print("______________________________________")
 
-    symbol, chart_type, function, start_date, end_date = (
-        get_user_input()
-    )
+    (symbol, chart_type, function, interval, start_date, end_date) = get_user_input()
 
     print("\nRetrieving stock data...")
 
-    stock_data = get_stock_data(symbol,function)
+    stock_data = get_stock_data(symbol,function,interval)
     
     if stock_data is None:
         return
 
-    filtered_data = filter_dates(stock_data, start_date, end_date)
+    filtered_data = filter_dates(stock_data,start_date,end_date)
+
+    if filtered_data is None:
+        return
+
+    chart = create_chart(filtered_data,symbol,chart_type,start_date,end_date)
+
+    if chart is not None:
+        chart.show()
 
 if __name__ == "__main__":
     main()
