@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 from datetime import datetime
+import plotly.express as px
 
 API_KEY = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=Y9FIZTAFCOT4JY38"
 
@@ -136,8 +137,30 @@ def filter_dates(df, start_date, end_date):
     pass
 
 def create_chart(df, symbol, chart_type, start_date, end_date):
-    # Generates the chart itself
-    pass
+    if df.empty:
+        print("No stock data available to create a chart.")
+        return None
+
+    if "close" not in df.columns:
+        print("No closing prices found.")
+        return None
+
+    title = f"{symbol} Stock Prices ({start_date} to {end_date})"
+
+    if chart_type == "Bar":
+        chart = px.bar(df, x=df.index, y="close", title=title)
+    elif chart_type == "Line":
+        chart = px.line(df, x=df.index, y="close", title=title)
+    else:
+        print("Invalid chart type.")
+        return None
+
+    chart.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Closing Price ($)"
+    )
+
+    return chart
 
 def main():
     print("             Stock Data Visualizer")
