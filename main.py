@@ -133,8 +133,8 @@ def get_stock_data(symbol, function):
     return df
 
 def filter_dates(df, start_date, end_date):
-    # This function filters stock data to the requested date range
-    pass
+    mask = (df.index >= start_date) & (df.index <= end_date)
+    return df.loc[mask]
 
 def create_chart(df, symbol, chart_type, start_date, end_date):
     if df.empty:
@@ -177,6 +177,7 @@ def main():
     if stock_data is None:
         return
 
+    filtered_data = filter_dates(stock_data, start_date, end_date)
 
 if __name__ == "__main__":
     main()
