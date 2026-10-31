@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+from datetime import datetime
 import plotly.express as px
 
 API_KEY = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=Y9FIZTAFCOT4JY38"
@@ -39,14 +40,9 @@ def get_user_input():
 
     while function_choice not in functions:
         function_choice = input("Invalid choice. Enter 1, 2, or 3: ").strip()
-
-    start_date = input("Enter the start date (YYYY-MM-DD): ").strip("-")
-    end_date = input("Enter the end date (YYYY-MM-DD): ").strip("-")
-
-    """
-        start_date = get_valid_date("Enter the start date (YYYY-MM-DD): ")
-        end_date = get_valid_date("Enter the end date (YYYY-MM-DD): ")
-    """
+    
+    start_date = get_valid_date("Enter the start date (YYYY-MM-DD): ")
+    end_date = get_valid_date("Enter the end date (YYYY-MM-DD): ")
 
     while end_date < start_date:
         print("Error: End date cannot be before start date.")
@@ -62,7 +58,14 @@ def get_user_input():
 
 def get_valid_date(prompt):
     # validates that the start date is before the end date
-    pass
+    while True:
+        date_str = input(prompt).strip()
+        try:
+            # Try to parse the date to validate the format
+            datetime.strptime(date_str, "%Y-%m-%d")
+            return date_str
+        except ValueError:
+            print("Invalid date format. Please use YYYY-MM-DD format.")
 
 def get_stock_data(symbol, function):
 
